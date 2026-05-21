@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Attacking UTMOS Audio Demo</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <p class="eyebrow">Audio sample demo</p>
+        <h1>Attacking UTMOS: Probing the Robustness of a Speech Quality Assessment Model</h1>
+        <p class="authors">Wen-Chin Huang and Tomoki Toda</p>
+        <p class="affiliation">Nagoya University, Japan</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="intro" aria-labelledby="noise-baseline-title">
+        <h2 id="noise-baseline-title">Noise Baseline Speech Samples</h2>
+        <p>
+          Gaussian noise baseline examples for three LibriSpeech utterances.
+          Each row contains the clean reference and the selected perturbation amplitudes.
+        </p>
+      </section>
+
+      <div id="demo-root"></div>
+    </main>
+
+    <template id="sample-table-template">
+      <section class="attack-section">
+        <div class="section-heading">
+          <h2></h2>
+          <p></p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Sample ID</th>
+                <th scope="col">Original</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </template>
+
+    <script>
+      const sampleIds = [
+        "1089-134686-0007",
+        "260-123286-0001",
+        "3575-170457-0010",
+      ];
+
+      const demoGroups = [
+        {
+          title: "Spectrogram Noise",
+          description: "HiFi-GAN resynthesis from noisy spectrogram amplitudes.",
+          folder: "spectrogram",
+          amplitudes: ["0.1", "0.5", "1", "5"],
+        },
+        {
+          title: "Waveform Noise",
+          description: "Direct waveform-domain Gaussian noise.",
+          folder: "waveform",
+          amplitudes: ["0.0001", "0.001", "0.01", "0.1"],
+        },
+        {
+          title: "EnCodec Latent Noise",
+          description: "Reconstruction from noisy EnCodec latent representations.",
+          folder: "encodec",
+          amplitudes: ["0.5", "1", "2", "5"],
+        },
+      ];
+
+      const root = document.querySelector("#demo-root");
+      const template = document.querySelector("#sample-table-template");
+
+      function audioCell(src, label) {
+        const cell = document.createElement("td");
+        const wrapper = document.createElement("div");
+        wrapper.className = "audio-cell";
+
+        const text = document.createElement("span");
+        text.textContent = label;
+
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.preload = "none";
+        audio.src = src;
+
+        wrapper.append(text, audio);
+        cell.append(wrapper);
+        return cell;
+      }
+
+      for (const group of demoGroups) {
+        const section = template.content.cloneNode(true);
+        const heading = section.querySelector("h2");
+        const description = section.querySelector(".section-heading p");
+        const headerRow = section.querySelector("thead tr");
+        const body = section.querySelector("tbody");
+
+        heading.textContent = group.title;
+        description.textContent = group.description;
+
+        for (const amp of group.amplitudes) {
+          const th = document.createElement("th");
+          th.scope = "col";
+          th.textContent = `Amp. ${amp}`;
+          headerRow.append(th);
+        }
+
+        for (const sampleId of sampleIds) {
+          const row = document.createElement("tr");
+          const sampleHeader = document.createElement("th");
+          sampleHeader.scope = "row";
+          sampleHeader.textContent = sampleId;
+          row.append(sampleHeader);
+
+          const base = `audio/noise-baseline/${group.folder}/${sampleId}`;
+          row.append(audioCell(`${base}/original.wav`, "Clean"));
+
+          for (const amp of group.amplitudes) {
+            row.append(audioCell(`${base}/noise_amp_${amp}.wav`, amp));
+          }
+
+          body.append(row);
+        }
+
+        root.append(section);
+      }
+    </script>
+  </body>
+</html>
