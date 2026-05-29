@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Attacking UTMOS Static Table Demo</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="static-page">
+    <header class="site-header">
+      <div class="container">
+        <p class="eyebrow">Audio sample demo</p>
+        <h1>Attacking UTMOS: Probing the Robustness of a Speech Quality Assessment Model</h1>
+        <p class="authors">Wen-Chin Huang and Tomoki Toda</p>
+        <p class="affiliation">Nagoya University, Japan</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <nav class="view-nav" aria-label="Demo navigation">
+        <a href="index.html">Overview</a>
+        <a href="interactive.html">Interactive</a>
+        <a href="static.html" aria-current="page">Static table</a>
+      </nav>
+      <section class="intro" aria-labelledby="noise-baseline-title">
+        <h2 id="noise-baseline-title">Static Audio Sample Tables</h2>
+        <p>
+          Gaussian noise baseline, score-preserving attack, and quality-preserving attack examples for three LibriSpeech utterances.
+          Each row contains the clean reference and the selected perturbation settings.
+        </p>
+      </section>
+
+      <section class="interactive-figure" aria-labelledby="interactive-title">
+        <div class="section-heading">
+          <h2 id="interactive-title">Clickable PESQ vs. UTMOS Map</h2>
+          <p>
+            Select a plotted baseline point to listen to representative samples at that attack space and amplitude.
+          </p>
+        </div>
+        <div class="figure-demo">
+          <div class="figure-stage" id="figure-stage">
+            <img
+              src="assets/noise-baseline-pesq-utmos.png"
+              alt="PESQ versus UTMOS scatter plot for random noise perturbation baseline"
+            >
+            <div class="marker-layer" id="marker-layer" aria-label="Clickable plotted points"></div>
+          </div>
+          <aside class="point-panel" id="point-panel" aria-live="polite">
+            <p class="panel-kicker">Selected point</p>
+            <h3>Choose a point</h3>
+            <p class="panel-meta">Clickable markers are shown for amplitudes with audio samples on this page.</p>
+            <div id="point-audio-list" class="point-audio-list"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="interactive-figure" aria-labelledby="score-interactive-title">
+        <div class="section-heading">
+          <h2 id="score-interactive-title">Clickable Score-Preserving Attack Map</h2>
+          <p>
+            Select a score-preserving attack point to listen to final adversarial samples at that space and lambda.
+          </p>
+        </div>
+        <div class="figure-demo">
+          <div class="figure-stage" id="score-figure-stage">
+            <img
+              src="assets/score-preserve-pesq-utmos.png"
+              alt="PESQ versus UTMOS scatter plot for score-preserving attacks"
+            >
+            <div class="marker-layer" id="score-marker-layer" aria-label="Clickable score-preserving attack points"></div>
+          </div>
+          <aside class="point-panel" id="score-point-panel" aria-live="polite">
+            <p class="panel-kicker">Selected point</p>
+            <h3>Choose a point</h3>
+            <p class="panel-meta">Clickable markers are shown for the score-preserving samples on this page.</p>
+            <div id="score-point-audio-list" class="point-audio-list"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="interactive-figure" aria-labelledby="quality-interactive-title">
+        <div class="section-heading">
+          <h2 id="quality-interactive-title">Clickable Quality-Preserving Attack Map</h2>
+          <p>
+            Select a quality-preserving attack point to listen to final adversarial samples at that space and lambda.
+          </p>
+        </div>
+        <div class="figure-demo">
+          <div class="figure-stage" id="quality-figure-stage">
+            <img
+              src="assets/quality-preserve-pesq-utmos.png"
+              alt="PESQ versus UTMOS scatter plot for quality-preserving attacks"
+            >
+            <div class="marker-layer" id="quality-marker-layer" aria-label="Clickable quality-preserving attack points"></div>
+          </div>
+          <aside class="point-panel" id="quality-point-panel" aria-live="polite">
+            <p class="panel-kicker">Selected point</p>
+            <h3>Choose a point</h3>
+            <p class="panel-meta">Clickable markers are shown for the quality-preserving samples on this page.</p>
+            <div id="quality-point-audio-list" class="point-audio-list"></div>
+          </aside>
+        </div>
+      </section>
+
+
+      <div id="demo-root"></div>
+      <div id="score-demo-root"></div>
+      <div id="quality-demo-root"></div>
+    </main>
+
+    <template id="sample-table-template">
+      <section class="attack-section">
+        <div class="section-heading">
+          <h2></h2>
+          <p></p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Sample ID</th>
+                <th scope="col">Original</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </template>
+
+    <script src="assets/noise-baseline-points.js"></script>
+    <script src="assets/score-preserve-points.js"></script>
+    <script src="assets/quality-preserve-points.js"></script>
+    <script>
+      const sampleIds = [
+        "1089-134686-0007",
+        "260-123286-0001",
+        "3575-170457-0010",
+      ];
+
+      const demoGroups = [
+        {
+          title: "Spectrogram Noise",
+          description: "HiFi-GAN resynthesis from noisy spectrogram amplitudes.",
+          folder: "spectrogram",
+          amplitudes: ["0.1", "0.5", "1", "5"],
+        },
+        {
+          title: "Waveform Noise",
+          description: "Direct waveform-domain Gaussian noise.",
+          folder: "waveform",
+          amplitudes: ["0.0001", "0.001", "0.01", "0.1"],
+        },
+        {
+          title: "EnCodec Latent Noise",
+          description: "Reconstruction from noisy EnCodec latent representations.",
+          folder: "encodec",
+          amplitudes: ["0.5", "1", "2", "5"],
+        },
+      ];
+
+      const scoreGroups = [
+        {
+          title: "Spectrogram Score-Preserving Attack",
+          description: "Final adversarial samples from mel-spectrogram + HiFi-GAN optimization.",
+          folder: "spectrogram",
+          lambdas: ["0.001", "0.01", "0.1", "1", "10", "100"],
+        },
+        {
+          title: "Waveform Score-Preserving Attack",
+          description: "Final adversarial samples from waveform optimization.",
+          folder: "waveform",
+          lambdas: ["1"],
+        },
+        {
+          title: "EnCodec Score-Preserving Attack",
+          description: "Final adversarial samples from EnCodec latent optimization.",
+          folder: "encodec",
+          lambdas: ["1"],
+        },
+      ];
+
+      const qualityGroups = [
+        {
+          title: "Spectrogram Quality-Preserving Attack",
+          description: "Final adversarial samples from mel-spectrogram + HiFi-GAN optimization.",
+          folder: "spectrogram",
+          lambdas: ["1e08", "1e07", "1e06", "1e05", "1e04"],
+        },
+        {
+          title: "Waveform Quality-Preserving Attack",
+          description: "Final adversarial samples from waveform optimization.",
+          folder: "waveform",
+          lambdas: ["1e08", "1e07", "1e06", "1e05", "1e04"],
+        },
+        {
+          title: "EnCodec Quality-Preserving Attack",
+          description: "Final adversarial samples from EnCodec latent optimization.",
+          folder: "encodec",
+          lambdas: ["1e08", "1e07", "1e06", "1e05", "1e04"],
+        },
+      ];
+
+      const root = document.querySelector("#demo-root");
+      const template = document.querySelector("#sample-table-template");
+      const pointPanel = document.querySelector("#point-panel");
+      const pointAudioList = document.querySelector("#point-audio-list");
+      const markerLayer = document.querySelector("#marker-layer");
+      const scoreRoot = document.querySelector("#score-demo-root");
+      const qualityRoot = document.querySelector("#quality-demo-root");
+      const scorePointPanel = document.querySelector("#score-point-panel");
+      const scorePointAudioList = document.querySelector("#score-point-audio-list");
+      const scoreMarkerLayer = document.querySelector("#score-marker-layer");
+
+      function audioCell(src, label) {
+        const cell = document.createElement("td");
+        const wrapper = document.createElement("div");
+        wrapper.className = "audio-cell";
+
+        const text = document.createElement("span");
+        text.textContent = label;
+
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.preload = "none";
+        audio.src = src;
+
+        wrapper.append(text, audio);
+        cell.append(wrapper);
+        return cell;
+      }
+
+      function audioBlock(src, label) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "audio-cell";
+
+        const text = document.createElement("span");
+        text.textContent = label;
+
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.preload = "none";
+        audio.src = src;
+
+        wrapper.append(text, audio);
+        return wrapper;
+      }
+
+      function selectPoint(point, button) {
+        for (const marker of markerLayer.querySelectorAll(".figure-marker")) {
+          marker.classList.toggle("is-active", marker === button);
+        }
+
+        pointPanel.querySelector("h3").textContent = `${point.label}, amplitude ${point.amplitude}`;
+        pointPanel.querySelector(".panel-meta").textContent =
+          `Mean PESQ ${point.pesq}, mean UTMOS ${point.utmos}, ${point.count} evaluated samples.`;
+        pointAudioList.replaceChildren();
+
+        const baseHeader = document.createElement("div");
+        baseHeader.className = "point-audio-heading";
+        baseHeader.textContent = "Representative utterances";
+        pointAudioList.append(baseHeader);
+
+        for (const sampleId of sampleIds) {
+          const item = document.createElement("div");
+          item.className = "point-audio-item";
+
+          const sampleLabel = document.createElement("strong");
+          sampleLabel.textContent = sampleId;
+
+          const base = `audio/noise-baseline/${point.folder}/${sampleId}`;
+          item.append(
+            sampleLabel,
+            audioBlock(`${base}/original.wav`, "Clean"),
+            audioBlock(`${base}/noise_amp_${point.amplitude}.wav`, `Noisy amp. ${point.amplitude}`),
+          );
+          pointAudioList.append(item);
+        }
+      }
+
+      for (const point of window.NOISE_BASELINE_POINTS || []) {
+        const marker = document.createElement("button");
+        marker.className = "figure-marker";
+        marker.type = "button";
+        marker.style.left = `${point.x}%`;
+        marker.style.top = `${point.y}%`;
+        marker.style.setProperty("--marker-color", point.color);
+        marker.setAttribute(
+          "aria-label",
+          `${point.label}, amplitude ${point.amplitude}, PESQ ${point.pesq}, UTMOS ${point.utmos}`,
+        );
+        marker.addEventListener("click", () => selectPoint(point, marker));
+        markerLayer.append(marker);
+      }
+
+      function lambdaDir(lambdaValue) {
+        return `lambda-${lambdaValue.replace(".", "p")}`;
+      }
+
+      function selectScorePoint(point, button) {
+        for (const marker of scoreMarkerLayer.querySelectorAll(".figure-marker")) {
+          marker.classList.toggle("is-active", marker === button);
+        }
+
+        scorePointPanel.querySelector("h3").textContent = `${point.label}, lambda ${point.lambda}`;
+        scorePointPanel.querySelector(".panel-meta").textContent =
+          `Mean PESQ ${point.pesq}, mean UTMOS ${point.utmos}, ${point.count} evaluated samples.`;
+        scorePointAudioList.replaceChildren();
+
+        const baseHeader = document.createElement("div");
+        baseHeader.className = "point-audio-heading";
+        baseHeader.textContent = "Representative utterances";
+        scorePointAudioList.append(baseHeader);
+
+        for (const sampleId of sampleIds) {
+          const item = document.createElement("div");
+          item.className = "point-audio-item";
+
+          const sampleLabel = document.createElement("strong");
+          sampleLabel.textContent = sampleId;
+
+          const base = `audio/score-preserve/${point.folder}/${point.lambdaDir}/${sampleId}`;
+          item.append(
+            sampleLabel,
+            audioBlock(`${base}/original.wav`, "Clean"),
+            audioBlock(`${base}/final_adv.wav`, `Attack lambda ${point.lambda}`),
+          );
+          scorePointAudioList.append(item);
+        }
+      }
+
+      for (const point of window.SCORE_PRESERVE_POINTS || []) {
+        const marker = document.createElement("button");
+        marker.className = "figure-marker";
+        marker.type = "button";
+        marker.style.left = `${point.x}%`;
+        marker.style.top = `${point.y}%`;
+        marker.style.setProperty("--marker-color", point.color);
+        marker.setAttribute(
+          "aria-label",
+          `${point.label}, lambda ${point.lambda}, PESQ ${point.pesq}, UTMOS ${point.utmos}`,
+        );
+        marker.addEventListener("click", () => selectScorePoint(point, marker));
+        scoreMarkerLayer.append(marker);
+      }
+
+      for (const group of demoGroups) {
+        const section = template.content.cloneNode(true);
+        const heading = section.querySelector("h2");
+        const description = section.querySelector(".section-heading p");
+        const headerRow = section.querySelector("thead tr");
+        const body = section.querySelector("tbody");
+
+        heading.textContent = group.title;
+        description.textContent = group.description;
+
+        for (const amp of group.amplitudes) {
+          const th = document.createElement("th");
+          th.scope = "col";
+          th.textContent = `Amp. ${amp}`;
+          headerRow.append(th);
+        }
+
+        for (const sampleId of sampleIds) {
+          const row = document.createElement("tr");
+          const sampleHeader = document.createElement("th");
+          sampleHeader.scope = "row";
+          sampleHeader.textContent = sampleId;
+          row.append(sampleHeader);
+
+          const base = `audio/noise-baseline/${group.folder}/${sampleId}`;
+          row.append(audioCell(`${base}/original.wav`, "Clean"));
+
+          for (const amp of group.amplitudes) {
+            row.append(audioCell(`${base}/noise_amp_${amp}.wav`, amp));
+          }
+
+          body.append(row);
+        }
+
+        root.append(section);
+      }
+
+      for (const group of scoreGroups) {
+        const section = template.content.cloneNode(true);
+        const heading = section.querySelector("h2");
+        const description = section.querySelector(".section-heading p");
+        const headerRow = section.querySelector("thead tr");
+        const body = section.querySelector("tbody");
+
+        heading.textContent = group.title;
+        description.textContent = group.description;
+
+        for (const lambdaValue of group.lambdas) {
+          const th = document.createElement("th");
+          th.scope = "col";
+          th.textContent = `Lambda ${lambdaValue}`;
+          headerRow.append(th);
+        }
+
+        for (const sampleId of sampleIds) {
+          const row = document.createElement("tr");
+          const sampleHeader = document.createElement("th");
+          sampleHeader.scope = "row";
+          sampleHeader.textContent = sampleId;
+          row.append(sampleHeader);
+
+          const originalBase = `audio/score-preserve/${group.folder}/${lambdaDir(group.lambdas[0])}/${sampleId}`;
+          row.append(audioCell(`${originalBase}/original.wav`, "Clean"));
+
+          for (const lambdaValue of group.lambdas) {
+            const base = `audio/score-preserve/${group.folder}/${lambdaDir(lambdaValue)}/${sampleId}`;
+            row.append(audioCell(`${base}/final_adv.wav`, lambdaValue));
+          }
+
+          body.append(row);
+        }
+
+        scoreRoot.append(section);
+      }
+
+      for (const group of qualityGroups) {
+        const section = template.content.cloneNode(true);
+        const heading = section.querySelector("h2");
+        const description = section.querySelector(".section-heading p");
+        const headerRow = section.querySelector("thead tr");
+        const body = section.querySelector("tbody");
+
+        heading.textContent = group.title;
+        description.textContent = group.description;
+
+        for (const lambdaValue of group.lambdas) {
+          const th = document.createElement("th");
+          th.scope = "col";
+          th.textContent = `Lambda ${lambdaValue}`;
+          headerRow.append(th);
+        }
+
+        for (const sampleId of sampleIds) {
+          const row = document.createElement("tr");
+          const sampleHeader = document.createElement("th");
+          sampleHeader.scope = "row";
+          sampleHeader.textContent = sampleId;
+          row.append(sampleHeader);
+
+          const originalBase = `audio/quality-preserve/${group.folder}/${lambdaDir(group.lambdas[0])}/${sampleId}`;
+          row.append(audioCell(`${originalBase}/original.wav`, "Clean"));
+
+          for (const lambdaValue of group.lambdas) {
+            const base = `audio/quality-preserve/${group.folder}/${lambdaDir(lambdaValue)}/${sampleId}`;
+            row.append(audioCell(`${base}/final_adv.wav`, lambdaValue));
+          }
+
+          body.append(row);
+        }
+
+        qualityRoot.append(section);
+      }
+
+    </script>
+  </body>
+</html>
