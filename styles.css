@@ -235,9 +235,40 @@ audio {
 }
 
 .panel-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   margin-bottom: 14px;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.metric-chip {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 9px 10px;
+  background: #f8fafb;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--chip-color, var(--accent));
+  border-radius: 8px;
+}
+
+.metric-label {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-chip strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .point-audio-list {
@@ -295,6 +326,38 @@ audio {
 
 .entry-page main {
   padding-bottom: 72px;
+}
+
+.landing-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 30px;
+}
+
+.landing-copy h2 {
+  margin-bottom: 8px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.landing-copy p {
+  color: var(--muted);
+}
+
+.landing-figure {
+  margin: 0;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.landing-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .entry-intro {
@@ -388,6 +451,10 @@ audio {
 }
 
 @media (max-width: 720px) {
+  .landing-overview {
+    grid-template-columns: 1fr;
+  }
+
   .entry-options {
     grid-template-columns: 1fr;
   }

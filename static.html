@@ -25,16 +25,15 @@
       <section class="intro" aria-labelledby="noise-baseline-title">
         <h2 id="noise-baseline-title">Static Audio Sample Tables</h2>
         <p>
-          Gaussian noise baseline, score-preserving attack, and quality-preserving attack examples for three LibriSpeech utterances.
-          Each row contains the clean reference and the selected perturbation settings.
+          Browse the same clean references, noise baselines, score-preserving attacks, and quality-preserving attacks for three LibriSpeech utterances.
         </p>
       </section>
 
       <section class="interactive-figure" aria-labelledby="interactive-title">
         <div class="section-heading">
-          <h2 id="interactive-title">Clickable PESQ vs. UTMOS Map</h2>
+          <h2 id="interactive-title">Noise Baseline</h2>
           <p>
-            Select a plotted baseline point to listen to representative samples at that attack space and amplitude.
+            Gaussian noise added in waveform, spectrogram, or EnCodec latent space.
           </p>
         </div>
         <div class="figure-demo">
@@ -56,9 +55,9 @@
 
       <section class="interactive-figure" aria-labelledby="score-interactive-title">
         <div class="section-heading">
-          <h2 id="score-interactive-title">Clickable Score-Preserving Attack Map</h2>
+          <h2 id="score-interactive-title">Score-Preserving Attack</h2>
           <p>
-            Select a score-preserving attack point to listen to final adversarial samples at that space and lambda.
+            Adversarial samples optimized to keep UTMOS high while lowering perceptual quality.
           </p>
         </div>
         <div class="figure-demo">
@@ -80,9 +79,9 @@
 
       <section class="interactive-figure" aria-labelledby="quality-interactive-title">
         <div class="section-heading">
-          <h2 id="quality-interactive-title">Clickable Quality-Preserving Attack Map</h2>
+          <h2 id="quality-interactive-title">Quality-Preserving Attack</h2>
           <p>
-            Select a quality-preserving attack point to listen to final adversarial samples at that space and lambda.
+            Adversarial samples optimized to lower UTMOS while preserving perceptual quality.
           </p>
         </div>
         <div class="figure-demo">
@@ -141,19 +140,19 @@
       const demoGroups = [
         {
           title: "Spectrogram Noise",
-          description: "HiFi-GAN resynthesis from noisy spectrogram amplitudes.",
+          description: "Noise baseline in mel-spectrogram space with HiFi-GAN resynthesis.",
           folder: "spectrogram",
           amplitudes: ["0.1", "0.5", "1", "5"],
         },
         {
           title: "Waveform Noise",
-          description: "Direct waveform-domain Gaussian noise.",
+          description: "Noise baseline in waveform space.",
           folder: "waveform",
           amplitudes: ["0.0001", "0.001", "0.01", "0.1"],
         },
         {
           title: "EnCodec Latent Noise",
-          description: "Reconstruction from noisy EnCodec latent representations.",
+          description: "Noise baseline in EnCodec latent space.",
           folder: "encodec",
           amplitudes: ["0.5", "1", "2", "5"],
         },
@@ -162,19 +161,19 @@
       const scoreGroups = [
         {
           title: "Spectrogram Score-Preserving Attack",
-          description: "Final adversarial samples from mel-spectrogram + HiFi-GAN optimization.",
+          description: "Score-preserving attack in mel-spectrogram space with HiFi-GAN resynthesis.",
           folder: "spectrogram",
           lambdas: ["0.001", "0.01", "0.1", "1", "10", "100"],
         },
         {
           title: "Waveform Score-Preserving Attack",
-          description: "Final adversarial samples from waveform optimization.",
+          description: "Score-preserving attack in waveform space.",
           folder: "waveform",
           lambdas: ["1"],
         },
         {
           title: "EnCodec Score-Preserving Attack",
-          description: "Final adversarial samples from EnCodec latent optimization.",
+          description: "Score-preserving attack in EnCodec latent space.",
           folder: "encodec",
           lambdas: ["1"],
         },
@@ -183,19 +182,19 @@
       const qualityGroups = [
         {
           title: "Spectrogram Quality-Preserving Attack",
-          description: "Final adversarial samples from mel-spectrogram + HiFi-GAN optimization.",
+          description: "Quality-preserving attack in mel-spectrogram space with HiFi-GAN resynthesis.",
           folder: "spectrogram",
           lambdas: ["1e08", "1e07", "1e06", "1e05", "1e04"],
         },
         {
           title: "Waveform Quality-Preserving Attack",
-          description: "Final adversarial samples from waveform optimization.",
+          description: "Quality-preserving attack in waveform space.",
           folder: "waveform",
           lambdas: ["1e08", "1e07", "1e06", "1e05", "1e04"],
         },
         {
           title: "EnCodec Quality-Preserving Attack",
-          description: "Final adversarial samples from EnCodec latent optimization.",
+          description: "Quality-preserving attack in EnCodec latent space.",
           folder: "encodec",
           lambdas: ["1e08", "1e07", "1e06", "1e05", "1e04"],
         },

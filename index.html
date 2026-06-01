@@ -17,11 +17,22 @@
     </header>
 
     <main class="container">
+      <section class="landing-overview" aria-labelledby="abstract-title">
+        <div class="landing-copy">
+          <h2 id="abstract-title">Abstract</h2>
+          <p>
+            UTMOS has become one of the most commonly used deep neural network-based speech quality assessment (SQA) metrics in speech processing research. In this paper, we attack UTMOS to probe its robustness. Starting from high-quality speech samples, we optimize the input in two directions: a score-preserving attack, which degrades perceived quality while maintaining the predicted score, and a quality-preserving attack, which lowers the predicted score while maintaining perceived quality. We consider three input spaces: raw waveform, mel spectrogram with a HiFi-GAN vocoder, and the latent space of EnCodec, a neural audio codec. Experimental results show that score-preserving attacks are effective against UTMOS. Although perfect quality-preserving attacks are more difficult, optimization in the EnCodec latent space provides the best chance of success. These results reveal failure modes of UTMOS and highlight the importance of robustness analysis for DNN-based SQA metrics.
+          </p>
+        </div>
+        <figure class="landing-figure">
+          <img src="assets/illustration.png" alt="Overview illustration of attacks against UTMOS">
+        </figure>
+      </section>
+
       <section class="entry-intro" aria-labelledby="entry-title">
         <h2 id="entry-title">Choose a Demo View</h2>
         <p>
-          Use the interactive view to select points directly on the PESQ vs. UTMOS maps,
-          or use the static table view to browse all included samples by attack type.
+          Use the interactive view to click points on the PESQ vs. UTMOS maps, or use the static table view to browse all samples by attack type.
         </p>
       </section>
 
@@ -29,12 +40,12 @@
         <a class="entry-option" href="interactive.html">
           <span class="entry-option-kicker">Interactive</span>
           <strong>Clickable map view</strong>
-          <span>Select plotted noise and score-preserving attack points, then listen to representative utterances.</span>
+          <span>Click plotted points and listen to representative utterances.</span>
         </a>
         <a class="entry-option" href="static.html">
           <span class="entry-option-kicker">Static</span>
           <strong>Table view</strong>
-          <span>Browse the same audio samples in compact tables organized by attack space and setting.</span>
+          <span>Browse the same audio samples in tables by attack space and setting.</span>
         </a>
       </nav>
     </main>

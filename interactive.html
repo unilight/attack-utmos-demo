@@ -22,19 +22,18 @@
         <a href="interactive.html" aria-current="page">Interactive</a>
         <a href="static.html">Static table</a>
       </nav>
-      <section class="intro" aria-labelledby="noise-baseline-title">
-        <h2 id="noise-baseline-title">Noise Baseline Speech Samples</h2>
+      <section class="intro" aria-labelledby="interactive-samples-title">
+        <h2 id="interactive-samples-title">Interactive Audio Samples</h2>
         <p>
-          Gaussian noise baseline examples for three LibriSpeech utterances.
-          Select a plotted point to compare the clean reference with the corresponding noisy sample.
+          Click a point on each PESQ vs. UTMOS map to compare the clean reference with the selected sample for three LibriSpeech utterances.
         </p>
       </section>
 
       <section class="interactive-figure" aria-labelledby="interactive-title">
         <div class="section-heading">
-          <h2 id="interactive-title">Clickable PESQ vs. UTMOS Map</h2>
+          <h2 id="interactive-title">Noise Baseline</h2>
           <p>
-            Select a plotted baseline point to listen to representative samples at that attack space and amplitude.
+            Gaussian noise added in waveform, spectrogram, or EnCodec latent space.
           </p>
         </div>
         <div class="figure-demo">
@@ -48,7 +47,7 @@
           <aside class="point-panel" id="point-panel" aria-live="polite">
             <p class="panel-kicker">Selected point</p>
             <h3>Choose a point</h3>
-            <p class="panel-meta">Clickable markers are shown for amplitudes with audio samples on this page.</p>
+            <div class="panel-meta">Clickable markers are shown for amplitudes with audio samples on this page.</div>
             <div id="point-audio-list" class="point-audio-list"></div>
           </aside>
         </div>
@@ -56,9 +55,9 @@
 
       <section class="interactive-figure" aria-labelledby="score-interactive-title">
         <div class="section-heading">
-          <h2 id="score-interactive-title">Clickable Score-Preserving Attack Map</h2>
+          <h2 id="score-interactive-title">Score-Preserving Attack</h2>
           <p>
-            Select a score-preserving attack point to listen to final adversarial samples at that space and lambda.
+            Adversarial samples optimized to keep UTMOS high while lowering perceptual quality.
           </p>
         </div>
         <div class="figure-demo">
@@ -72,7 +71,7 @@
           <aside class="point-panel" id="score-point-panel" aria-live="polite">
             <p class="panel-kicker">Selected point</p>
             <h3>Choose a point</h3>
-            <p class="panel-meta">Clickable markers are shown for the score-preserving samples on this page.</p>
+            <div class="panel-meta">Clickable markers are shown for the score-preserving samples on this page.</div>
             <div id="score-point-audio-list" class="point-audio-list"></div>
           </aside>
         </div>
@@ -80,9 +79,9 @@
 
       <section class="interactive-figure" aria-labelledby="quality-interactive-title">
         <div class="section-heading">
-          <h2 id="quality-interactive-title">Clickable Quality-Preserving Attack Map</h2>
+          <h2 id="quality-interactive-title">Quality-Preserving Attack</h2>
           <p>
-            Select a quality-preserving attack point to listen to final adversarial samples at that space and lambda.
+            Adversarial samples optimized to lower UTMOS while preserving perceptual quality.
           </p>
         </div>
         <div class="figure-demo">
@@ -96,7 +95,7 @@
           <aside class="point-panel" id="quality-point-panel" aria-live="polite">
             <p class="panel-kicker">Selected point</p>
             <h3>Choose a point</h3>
-            <p class="panel-meta">Clickable markers are shown for the quality-preserving samples on this page.</p>
+            <div class="panel-meta">Clickable markers are shown for the quality-preserving samples on this page.</div>
             <div id="quality-point-audio-list" class="point-audio-list"></div>
           </aside>
         </div>
@@ -147,14 +146,47 @@
         return wrapper;
       }
 
+      function metricChip(label, value) {
+        const chip = document.createElement("div");
+        chip.className = "metric-chip";
+
+        const chipLabel = document.createElement("span");
+        chipLabel.className = "metric-label";
+        chipLabel.textContent = label;
+
+        const chipValue = document.createElement("strong");
+        chipValue.textContent = value;
+
+        chip.append(chipLabel, chipValue);
+        return chip;
+      }
+
+      function spaceLabel(folder) {
+        return {
+          waveform: "Waveform",
+          spectrogram: "Spectrogram",
+          encodec: "EnCodec",
+        }[folder] || folder;
+      }
+
+      function renderPointMetrics(panel, point, parameterLabel, parameterValue) {
+        const metrics = panel.querySelector(".panel-meta");
+        metrics.style.setProperty("--chip-color", point.color);
+        metrics.replaceChildren(
+          metricChip("Space", spaceLabel(point.folder)),
+          metricChip(parameterLabel, parameterValue),
+          metricChip("PESQ", point.pesq),
+          metricChip("UTMOS", point.utmos),
+        );
+      }
+
       function selectPoint(point, button) {
         for (const marker of markerLayer.querySelectorAll(".figure-marker")) {
           marker.classList.toggle("is-active", marker === button);
         }
 
-        pointPanel.querySelector("h3").textContent = `${point.label}, amplitude ${point.amplitude}`;
-        pointPanel.querySelector(".panel-meta").textContent =
-          `Mean PESQ ${point.pesq}, mean UTMOS ${point.utmos}, ${point.count} evaluated samples.`;
+        pointPanel.querySelector("h3").textContent = point.label;
+        renderPointMetrics(pointPanel, point, "Amplitude", point.amplitude);
         pointAudioList.replaceChildren();
 
         const baseHeader = document.createElement("div");
@@ -207,9 +239,8 @@
           marker.classList.toggle("is-active", marker === button);
         }
 
-        scorePointPanel.querySelector("h3").textContent = `${point.label}, lambda ${point.lambda}`;
-        scorePointPanel.querySelector(".panel-meta").textContent =
-          `Mean PESQ ${point.pesq}, mean UTMOS ${point.utmos}, ${point.count} evaluated samples.`;
+        scorePointPanel.querySelector("h3").textContent = point.label;
+        renderPointMetrics(scorePointPanel, point, "Lambda", point.lambda);
         scorePointAudioList.replaceChildren();
 
         const baseHeader = document.createElement("div");
@@ -254,9 +285,8 @@
           marker.classList.toggle("is-active", marker === button);
         }
 
-        qualityPointPanel.querySelector("h3").textContent = `${point.label}, lambda ${point.lambda}`;
-        qualityPointPanel.querySelector(".panel-meta").textContent =
-          `Mean PESQ ${point.pesq}, mean UTMOS ${point.utmos}, ${point.count} evaluated samples.`;
+        qualityPointPanel.querySelector("h3").textContent = point.label;
+        renderPointMetrics(qualityPointPanel, point, "Lambda", point.lambda);
         qualityPointAudioList.replaceChildren();
 
         const baseHeader = document.createElement("div");
